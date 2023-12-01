@@ -8,6 +8,10 @@ fn read_input() {
   result
 }
 
+pub fn part1() {
+  42
+}
+
 pub fn main() {
   io.println("Hello day 1")
   let input = read_input()
