@@ -8,7 +8,7 @@ fn read_input() {
   result
 }
 
-pub fn part1() {
+pub fn part1(text: String) -> Int {
   42
 }
 

@@ -18,3 +18,6 @@ now I actually want to add back tests, I will work in a test driven way with the
 - added back a test by copying and pasting from a new test project
 - noticed that the default gleeunit template does not show how to import from my project in the test file (`import gl/day01` does not work and I should use `import day01`)
 -  I will need to understand if I can ask to run only specific test, not a priority now
+
+now working on part1:
+- noticed that name of type `String` is not mentioned in Language Tour (could have been `Str` like I have `Int` and not `Integer`)
