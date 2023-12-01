@@ -65,6 +65,6 @@ pub fn part2(text: String) -> Int {
 
 pub fn main() {
   let input = read_input()
-  io.println("part1: " <> int.to_string(part1(input)))
-  io.println("part2: " <> int.to_string(part2(input)))
+  io.println("part1: " <> int.to_string(part1(input))) // 54081
+  io.println("part2: " <> int.to_string(part2(input))) // 54649
 }
