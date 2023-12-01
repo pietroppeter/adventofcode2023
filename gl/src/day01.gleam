@@ -39,7 +39,32 @@ pub fn part1(text: String) -> Int {
   |> int.sum
 }
 
+fn fix_line(line: String) -> String {
+  line
+  |> string.replace("t", "tt") // eightwo -> eighttwo (or eighthree)
+  |> string.replace("on", "oon") // zerone -> zeroone (but not four -> foour)
+  |> string.replace("ei", "eei") // fiveight -> fiveeight (but not seven -> seeveen)
+  |> string.replace("zero", "0")
+  |> string.replace("one", "1")
+  |> string.replace("two", "2")
+  |> string.replace("three", "3")
+  |> string.replace("four", "4")
+  |> string.replace("five", "5")
+  |> string.replace("six", "6")
+  |> string.replace("seven", "7")
+  |> string.replace("eight", "8")
+  |> string.replace("nine", "9")
+}
+
+pub fn part2(text: String) -> Int {
+  string.split(text, on: "\n")
+  |> list.map(fix_line)
+  |> list.map(calibration)
+  |> int.sum
+}
+
 pub fn main() {
   let input = read_input()
   io.println("part1: " <> int.to_string(part1(input)))
+  io.println("part2: " <> int.to_string(part2(input)))
 }
