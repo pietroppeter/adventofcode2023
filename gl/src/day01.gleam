@@ -1,5 +1,7 @@
 import gleam/io
 import simplifile
+import gleam/string
+import gleam/list
 
 
 fn read_input() {
@@ -9,7 +11,8 @@ fn read_input() {
 }
 
 pub fn part1(text: String) -> Int {
-  42
+  string.split(text, on: "\n")
+  |> list.length
 }
 
 pub fn main() {
