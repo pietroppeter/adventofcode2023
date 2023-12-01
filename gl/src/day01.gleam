@@ -2,6 +2,7 @@ import gleam/io
 import simplifile
 import gleam/string
 import gleam/list
+import gleam/int
 
 
 fn read_input() {
@@ -10,9 +11,14 @@ fn read_input() {
   result
 }
 
+fn calibration(line: String) -> Int {
+  string.length(line)
+}
+
 pub fn part1(text: String) -> Int {
   string.split(text, on: "\n")
-  |> list.length
+  |> list.map(calibration)
+  |> int.sum
 }
 
 pub fn main() {
