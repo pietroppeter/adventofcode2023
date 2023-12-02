@@ -27,3 +27,7 @@ https://github.com/gleam-lang/stdlib/blob/82559e94597d85da6064e11e6f3d8d776dbcbe
 - and the relevant MDN does not seem to mention the unicode annex too: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Segmenter/Segmenter
 
 See also `gl/src/graphemes.gleam` for a few examples in gleam.
+
+From further discussion in gleam discord, I was pointed ou that Elixir:
+- has its own implementation here: https://github.com/elixir-lang/elixir/blob/v1.12.3/lib/elixir/unicode/unicode.ex#L259
+- and this is the documentation: https://hexdocs.pm/elixir/1.12/String.html#module-code-points-and-grapheme-cluster
