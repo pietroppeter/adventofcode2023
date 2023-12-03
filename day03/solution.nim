@@ -74,9 +74,9 @@ func part1(schema: Schema): int =
 
 print part1 schema1
 
-let input = "input.txt".readFile
+let myPuzzle = "input.txt".readFile.parseSchema
 
-print part1 input.parseSchema # 539433
+print part1 myPuzzle # 539433
 
 func gearRatio(s: Sym, nums: seq[Num]): int =
   if s.ch != '*':
@@ -95,5 +95,5 @@ func part2(schema: Schema): int =
     result.inc s.gearRatio schema.nums
 
 print part2 schema1
-print part2 input.parseSchema # 75847567
+print part2 myPuzzle # 75847567
 
