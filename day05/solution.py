@@ -41,3 +41,18 @@ print(part1(example)) # 35
 import puzzle
 print(part1(puzzle)) # 
 
+# idea: rangemap
+# ranges_in      mapdefs       ranges_out
+# [(2, 3)] -> [(6, 3, 5)] -> [(2, 1), (6, 2)]
+def rangemap(mapdefs, range_in):
+  ranges_out = []
+  for mapdef in mapdefs:
+    rout, ranges_in = overlap(mapdef, range_in)
+  return ranges_out
+
+
+def rangesmap(mapdefs, ranges_in):
+  ranges_out = []
+  for range_in in ranges_in:
+    ranges_out += rangemap(mapdefs, range_in)
+  return ranges_out

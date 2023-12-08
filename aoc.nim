@@ -1,3 +1,5 @@
+# we actually have maxplit parameter in strutils.split! all of the stuff below is redundant
+
 func split2*(text: string, sep: char): (string, string) =
   var i = 0
   while i < text.len:
