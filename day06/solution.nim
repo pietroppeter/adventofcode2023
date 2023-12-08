@@ -73,6 +73,3 @@ print part1 puzzle
 
 print wins (71530, 940200) # 71503 ok
 print wins (48938466'i64, 261119210191063)
-
-let num = 261119210191063
-print num
