@@ -1,22 +1,27 @@
 import batteries, print
 
 type
-  Data = tuple[time, record: int] 
+  Data = tuple[time, record: int64] 
   Document =
     seq[Data]
 
 let example1 = @[
-  (7, 9),
-  (15, 40),
-  (30, 200),
+  (7'i64, 9'i64),
+  (15'i64, 40'i64),
+  (30'i64, 200'i64),
 ]
 
 let puzzle = @[
-  (48, 261),
-  (93, 1192),
-  (84, 1019),
-  (66, 1063),
+  (48'i64, 261'i64),
+  (93'i64, 1192'i64),
+  (84'i64, 1019'i64),
+  (66'i64, 1063'i64),
 ]
+# (48938466, 261119210191063)
+
+converter toInt64(num: int): int64 = num.int64
+
+converter toInt64Data(t: (int, int)): (int64, int64) = (t[0].int64, t[1].int64)
 
 func wins(data: Data): int =
   let
@@ -65,3 +70,9 @@ func part1(doc: Document): int =
 
 print part1 example1
 print part1 puzzle
+
+print wins (71530, 940200) # 71503 ok
+print wins (48938466'i64, 261119210191063)
+
+let num = 261119210191063
+print num
