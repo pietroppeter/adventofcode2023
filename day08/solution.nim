@@ -36,8 +36,8 @@ func parseMap(text: string): Map =
     let split3 = split2[1].strip(chars = {'(', ')'}).split(", ")
     assert split3.len == 2, $split3
     result.graph[split2[0]] = (split3[0], split3[1])
-  assert "AAA" in result.graph
-  assert "ZZZ" in result.graph
+  #assert "AAA" in result.graph
+  #assert "ZZZ" in result.graph
   for instr in result.instructions:
     assert instr == 'L' or instr == 'R'
   result.node = "AAA"
@@ -74,3 +74,36 @@ print part1 map2
 
 let puzzleMap = "puzzle.txt".readFile.strip.parseMap
 print part1 puzzleMap
+
+let example3 = """
+LR
+
+11A = (11B, XXX)
+11B = (XXX, 11Z)
+11Z = (11B, XXX)
+22A = (22B, XXX)
+22B = (22C, 22C)
+22C = (22Z, 22Z)
+22Z = (22B, 22B)
+XXX = (XXX, XXX)"""
+let map3 = example3.parseMap
+
+proc traverse2(m: var Map) =
+  while m.node[^1] != 'Z':
+    step m
+
+func part2(m: Map): int =
+  var allSteps: seq[int]
+  for node in m.graph.keys:
+    if node[^1] != 'A':
+      continue
+    var m = m
+    m.i = 0
+    m.steps = 0
+    m.node = node
+    traverse2 m
+    allSteps.add m.steps
+  lcm allSteps
+
+print part2 map3
+print part2 puzzleMap
