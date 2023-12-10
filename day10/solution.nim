@@ -205,6 +205,7 @@ func findInside(g: Grid, loop: seq[Dir2]): HashSet[Vec2] =
     toRemove = initHashSet[Vec2]()
     
   while frontier.len > 0:
+    # last fix was adding newlyAdded
     var newlyAdded = initHashSet[Vec2]()
     for v in frontier:
       count = 0
