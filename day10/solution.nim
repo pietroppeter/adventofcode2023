@@ -9,9 +9,9 @@ LJ.LJ"""
 
 type
   Direction = enum up, right, down, left
-  Vec2 = tuple[x, y: int]
-  Dir2 = tuple[dir: Direction, vec: Vec2]
-  Grid = Table[Vec2, char]
+  Vec = tuple[x, y: int]
+  DirVec = tuple[dir: Direction, vec: Vec]
+  Grid = Table[Vec, char]
 
 func parseGrid(text: string): Grid =
   let text = text.strip
@@ -29,7 +29,7 @@ func parseGrid(text: string): Grid =
 let grid2 = parseGrid example2
 print grid2
 
-func findStart(g: Grid): Vec2 =
+func findStart(g: Grid): Vec =
   for v, c in g:
     if c == 'S':
       return v
@@ -37,7 +37,7 @@ func findStart(g: Grid): Vec2 =
 let start2 = findStart grid2
 print start2
 
-func dirNeighbours(v: Vec2): seq[Dir2] =
+func dirNeighbours(v: Vec): seq[DirVec] =
   @[
     (up, (v.x, v.y - 1)),
     (right, (v.x + 1, v.y)),
@@ -79,12 +79,12 @@ func reverse(d: Direction): Direction =
 func linksTo(c: char): seq[Direction] =
   c.linksFrom.mapIt(reverse it)
 
-func linkNeighbours(g: Grid, v: Vec2): seq[Dir2] =
+func linkNeighbours(g: Grid, v: Vec): seq[DirVec] =
   for dv in dirNeighbours(v):
     if v in g and dv.vec in g and dv.dir in g[v].linksTo and dv.dir in g[dv.vec].linksFrom:
       result.add dv
 
-func findStartDir(g: Grid): Dir2 =
+func findStartDir(g: Grid): DirVec =
   let v = findStart g
   for dv in g.linkNeighbours(v):
     return dv
@@ -92,7 +92,7 @@ func findStartDir(g: Grid): Dir2 =
 
 print grid2.findStartDir
 
-func nextDir(g: Grid, dv: Dir2): Dir2 =
+func nextDir(g: Grid, dv: DirVec): DirVec =
   assert dv.vec in g
   for dv2 in g.linkNeighbours(dv.vec):
     if dv2.dir == reverse dv.dir:
@@ -101,14 +101,14 @@ func nextDir(g: Grid, dv: Dir2): Dir2 =
       return dv2
   raise ValueError.newException "no next dir"
 
-func loopAround(g: Grid): seq[Dir2] =
+func loopAround(g: Grid): seq[DirVec] =
   var dv = findStartDir g 
   result.add dv
   while g[dv.vec] != 'S':
     dv = g.nextDir dv
     result.add dv
 
-func fromVec(dv: Dir2): Vec2 =
+func fromVec(dv: DirVec): Vec =
   case dv.dir
   of up:
     (dv.vec.x, dv.vec.y + 1)
@@ -119,7 +119,7 @@ func fromVec(dv: Dir2): Vec2 =
   of left:
     (dv.vec.x + 1, dv.vec.y)
 
-func step(g: Grid, dv: Dir2): string =
+func step(g: Grid, dv: DirVec): string =
   let v = dv.fromVec
   result.add g[v]
   result.add $v
@@ -147,7 +147,7 @@ print part1 grid2
 print part1 grid1
 print part1 gridPuzzle
 
-func inclGrid(s: var HashSet[Vec2], g: Grid, l: seq[Dir2], v: Vec2): int =
+func inclGrid(s: var HashSet[Vec], g: Grid, l: seq[DirVec], v: Vec): int =
   if v notIn s and v notIn l.mapIt(it.vec) and v in g:
     s.incl v
     result = 1
@@ -177,7 +177,7 @@ func replaceStart(g: Grid): Grid =
 
 
 
-func findInside(g: Grid, loop: seq[Dir2]): HashSet[Vec2] =
+func findInside(g: Grid, loop: seq[DirVec]): HashSet[Vec] =
   # go around the loop and add everything to the right
   let g = replaceStart g
   var count = 0
@@ -202,10 +202,10 @@ func findInside(g: Grid, loop: seq[Dir2]): HashSet[Vec2] =
   # now look to expand the frontier of neighbours
   var
     frontier = result
-    newFrontier = initHashSet[Vec2]()
+    newFrontier = initHashSet[Vec]()
     
   while frontier.len > 0:
-    newFrontier = initHashSet[Vec2]()
+    newFrontier = initHashSet[Vec]()
     for v in frontier:
       count = 0
       for v2 in v.dirNeighbours: # just neighbours would be fine too
@@ -215,7 +215,7 @@ func findInside(g: Grid, loop: seq[Dir2]): HashSet[Vec2] =
           newFrontier.incl v2.vec
     frontier = newFrontier
 
-func reverse(loop: seq[Dir2]): seq[Dir2] =
+func reverse(loop: seq[DirVec]): seq[DirVec] =
   for dv in loop:
     result.add (reverse dv.dir, dv.fromVec)
 
@@ -224,13 +224,13 @@ func xymax(g: Grid): (int, int) =
   let ymax = g.keys.toSeq.mapIt(it.y).max
   (xmax, ymax)
 
-func touchesBorder(g: Grid, inside: HashSet[Vec2]): bool =
+func touchesBorder(g: Grid, inside: HashSet[Vec]): bool =
   let (xmax, ymax) = xymax g
   for v in inside:
     if v.x == 0 or v.y == 0 or v.x == xmax or v.y == ymax:
       return true
 
-func findInside(g: Grid): HashSet[Vec2] =
+func findInside(g: Grid): HashSet[Vec] =
   let loop = loopAround g
   result = g.findInside loop
   if g.touchesBorder result:
@@ -281,7 +281,7 @@ print part2 grid5 # 10
 # 265 too low
 # 259 not right
 
-func toString(g: Grid, inside = initHashSet[Vec2]()): string =
+func toString(g: Grid, inside = initHashSet[Vec]()): string =
   let (xmax, ymax) = xymax g
   let loop = (loopAround g).mapIt(it.vec)
   for y in 0 .. ymax:
