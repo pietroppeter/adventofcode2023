@@ -202,21 +202,18 @@ func findInside(g: Grid, loop: seq[Dir2]): HashSet[Vec2] =
   # now look to expand the frontier of neighbours
   var
     frontier = result
-    toRemove = initHashSet[Vec2]()
+    newFrontier = initHashSet[Vec2]()
     
   while frontier.len > 0:
-    # last fix was adding newlyAdded
-    var newlyAdded = initHashSet[Vec2]()
+    newFrontier = initHashSet[Vec2]()
     for v in frontier:
       count = 0
       for v2 in v.dirNeighbours: # just neighbours would be fine too
         let cinc = result.inclGrid(g, loop, v2.vec) 
         count.inc cinc
         if cinc > 0:
-          newlyAdded.incl v2.vec
-      if count == 0:
-        toRemove.incl v
-    frontier = frontier - toRemove + newlyAdded
+          newFrontier.incl v2.vec
+    frontier = newFrontier
 
 func reverse(loop: seq[Dir2]): seq[Dir2] =
   for dv in loop:
@@ -317,5 +314,5 @@ let grid6 = """
 echo "---grid6"
 echo grid6.toString(grid6.findInside)
 
-print part2 gridPuzzle
+print part2 gridPuzzle # 353 ok
 # "solution.txt".writeFile (gridPuzzle.toString(gridPuzzle.findInside))
