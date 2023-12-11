@@ -76,6 +76,7 @@ func pairwiseDistances(m: Map): PairwiseDistances =
       result.distances.add distance(m[i], m[j])
   result.n = m.len
 
+# trapeizodal and dist functions are not actually used but it was fun to derive them (nerd sniped)
 func trapeizodal(n, m: int): int =
   assert m <= n
   (n*(n + 1) - m*(m + 1)) div 2
@@ -102,8 +103,9 @@ print sum dist1.distances # 374 ok
 func part1(m: Map): int =
   m.expand.pairwiseDistances.distances.sum
 
-print part1 map1
 let puzzleMap = "puzzle.txt".readFile.parseMap
+
+print part1 map1
 print part1 puzzleMap # 9522407
 
 func part2(m: Map, age = 1000000): int =
