@@ -17,19 +17,12 @@ Map = list[Point]
 
 
 def parse_map(text: str) -> Map:
-    result = []
-    x = 0
-    y = 0
-    for c in text.strip():
-        if c == "\n":
-            y += 1
-            x = 0
-        elif c == "#":
-            result.append((x, y))
-            x += 1
-        else:
-            x += 1
-    return result
+    return [
+        (x, y)
+        for y, line in enumerate(text.strip().splitlines())
+        for x, c in enumerate(line)
+        if c == "#"
+    ]
 
 
 map1 = parse_map(example1)
