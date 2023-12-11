@@ -1,6 +1,6 @@
-import batteries, print
+from collections import Counter
 
-let example1 = """
+example1 = """
 ...#......
 .......#..
 #.........
@@ -12,105 +12,83 @@ let example1 = """
 .......#..
 #...#....."""
 
-type
-  Point = tuple[x, y: int]
-  Map = seq[Point]
+Point = tuple[int, int]
+Map = list[Point]
 
-func parseMap(text: string): Map =
-  var
+
+def parse_map(text: str) -> Map:
+    result = []
     x = 0
     y = 0
-  for c in text.strip:
-    if c == '\n':
-      inc y
-      x = 0
-    elif c == '#':
-      result.add (x, y)
-      inc x
-    else:
-      inc x
+    for c in text.strip():
+        if c == "\n":
+            y += 1
+            x = 0
+        elif c == "#":
+            result.append((x, y))
+            x += 1
+        else:
+            x += 1
+    return result
 
-let map1 = example1.parseMap
-print map1
-print map1.len
 
-func zeroCounts(t: CountTable[int]): seq[int] =
-  for n in 0 ..< t.keys.toSeq.max:
-    if t[n] == 0:
-      result.add n
+map1 = parse_map(example1)
+print(map1)
+print(len(map1))
 
-func zeroCounts(m: Map): (seq[int], seq[int]) =
-  (m.mapIt(it.x).toCountTable.zeroCounts,
-   m.mapIt(it.y).toCountTable.zeroCounts)
 
-print map1.zeroCounts # @[2, 5, 8], @[3, 7]
+def zero_counts(c: Counter[int, int]) -> list[int]:
+    return [n for n in range(max(c.keys())) if c[n] == 0]
 
-func expand(n: int, zeros: seq[int], age = 1): int =
-  # assume zeros is increasing
-  result = n
-  for z in zeros:
-    if z < n:
-      result.inc age
-    else:
-      break
 
-func expand(m: Map, age = 1): Map =
-  let (xZeros, yZeros) = m.zeroCounts
-  for p in m:
-    result.add (p.x.expand(xZeros, age), p.y.expand(yZeros, age))
+def zero_counts_map(m: Map) -> (list[int], list[int]):
+    cx = Counter(map(lambda p: p[0], m))
+    cy = Counter(map(lambda p: p[1], m))
+    return (zero_counts(cx), zero_counts(cy))
 
-let map1e = expand map1
-print map1e
 
-func distance(p, q: Point): int =
-  abs(p.x - q.x) + abs(p.y - q.y)
+print(zero_counts_map(map1))
 
-type
-  PairwiseDistances = object
-    distances: seq[int]
-    n: int
 
-func pairwiseDistances(m: Map): PairwiseDistances =
-  for i in 0 .. m.high:
-    for j in (i + 1) .. m.high:
-      result.distances.add distance(m[i], m[j])
-  result.n = m.len
+def expand(n: int, zeros: list[int], age=1) -> int:
+    return n + sum([age for z in zeros if z < n])
 
-# trapeizodal and dist functions are not actually used but it was fun to derive them (nerd sniped)
-func trapeizodal(n, m: int): int =
-  assert m <= n
-  (n*(n + 1) - m*(m + 1)) div 2
 
-func dist(d: PairwiseDistances; i, j: int): int =
-  assert i < d.n
-  assert j < d.n
-  if i == j:
-    0
-  else:
-    let
-      (mn, delta) = (min(i, j), max(i, j) - min(i, j))
-      k = trapeizodal(d.n - 1, d.n - mn - 1)
-    d.distances[k + delta - 1]
+def expand_map(m: Map, age=1) -> Map:
+    xZeros, yZeros = zero_counts_map(m)
+    return [(expand(p[0], xZeros, age), expand(p[1], yZeros, age)) for p in m]
 
-let
-  dist1 = map1e.pairwiseDistances
-print dist1.dist(0, 6) # 15
-print dist1.dist(2, 5) # 17
-print dist1.dist(7, 8) # 5
 
-print sum dist1.distances # 374 ok
+map1e = expand_map(map1)
+print(map1e)
 
-func part1(m: Map): int =
-  m.expand.pairwiseDistances.distances.sum
 
-let puzzleMap = "puzzle.txt".readFile.parseMap
+def distance(p: Point, q: Point) -> int:
+    return abs(p[0] - q[0]) + abs(p[1] - q[1])
 
-print part1 map1
-print part1 puzzleMap # 9522407
 
-func part2(m: Map, age = 1000000): int =
-  m.expand(age - 1).pairwiseDistances.distances.sum
+def pairwise_distances(m: Map) -> list[int]:
+    return [distance(m[i], m[j]) for i in range(len(m)) for j in range(len(m)) if i < j]
 
-print part2(map1, age = 10)
-print part2(map1, age = 100)
-print part2 puzzleMap
+
+print(sum(pairwise_distances(map1e)))
+
+
+def part1(m: Map) -> int:
+    return sum(pairwise_distances(expand_map(m)))
+
+
+with open("puzzle.txt", "r") as f:
+    puzzle_map = parse_map(f.read())
+
+print(part1(map1))  # 374
+print(part1(puzzle_map))
+
+
+def part2(m: Map, age=1000000) -> int:
+    return sum(pairwise_distances(expand_map(m, age=age - 1)))
+
+
+print(part2(map1, age=10))  # 1030
+print(part2(map1, age=100))  # 8410
+print(part2(puzzle_map))
