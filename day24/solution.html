@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+  <title>solution.nim</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>🐳</text></svg>">
+  <meta content="text/html; charset=utf-8" http-equiv="content-type">
+  <meta content="width=device-width, initial-scale=1" name="viewport">
+  <link rel='stylesheet' href='https://unpkg.com/normalize.css'>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/kognise/water.css@latest/dist/light.min.css">
+  <link rel='stylesheet' href='https://cdn.jsdelivr.net/gh/pietroppeter/nimib/assets/atom-one-light.css'>
+  <style>
+.nb-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.nb-small {
+  font-size: 0.8rem;
+}
+button.nb-small {
+  float: right;
+  padding: 2px;
+  padding-right: 5px;
+  padding-left: 5px;
+}
+section#source {
+  display:none
+}
+
+.nb-output {
+  line-height: 1.15;
+}
+</style>
+  
+</head>
+<body>
+<header>
+<div class="nb-box">
+  <span><a href=".">🏡</a></span>
+  <span><code>solution.nim</code></span>
+  <span><a href="https://github.com/pietroppeter/adventofcode2023"><svg aria-hidden="true" width="1.2em" height="1.2em" style="vertical-align: middle;" preserveAspectRatio="xMidYMid meet" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59c.4.07.55-.17.55-.38c0-.19-.01-.82-.01-1.49c-2.01.37-2.53-.49-2.69-.94c-.09-.23-.48-.94-.82-1.13c-.28-.15-.68-.52-.01-.53c.63-.01 1.08.58 1.23.82c.72 1.21 1.87.87 2.33.66c.07-.52.28-.87.51-1.07c-1.78-.2-3.64-.89-3.64-3.95c0-.87.31-1.59.82-2.15c-.08-.2-.36-1.02.08-2.12c0 0 .67-.21 2.2.82c.64-.18 1.32-.27 2-.27c.68 0 1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82c.44 1.1.16 1.92.08 2.12c.51.56.82 1.27.82 2.15c0 3.07-1.87 3.75-3.65 3.95c.29.25.54.73.54 1.48c0 1.07-.01 1.93-.01 2.2c0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z" fill="#000"></path></svg></a></span>
+</div>
+<hr>
+</header><main>
+<h2>Advent of Code 2023, Day 24</h2>
+<p>We are given position and velocity of hail particles
+moving in 3-dimensional space (all integer values of course).</p>
+<p>In Part 1 we are asked to find if forward paths intersect
+when project in 2-dimensional X-Y space,
+looking only in a limited range given by a min and max
+coordinate (valid both for X and Y).</p>
+<p>Let's start by parsing the data, using the example</p>
+<pre><code class="nim hljs"><span class="hljs-keyword">let</span> exampleText = <span class="hljs-string">&quot;&quot;&quot;
+19, 13, 30 @ -2,  1, -2
+18, 19, 22 @ -1, -1, -2
+20, 25, 34 @ -2, -2, -4
+12, 31, 28 @ -1, -2, -1
+20, 19, 15 @  1, -5, -3&quot;&quot;&quot;</span>
+
+<span class="hljs-keyword">type</span>
+  <span class="hljs-type">Vec3</span> = <span class="hljs-keyword">tuple</span>[x, y, z: <span class="hljs-built_in">int</span>]
+  <span class="hljs-type">PhaseCoord</span> = <span class="hljs-keyword">tuple</span>[pos, vel: <span class="hljs-type">Vec3</span>]
+
+<span class="hljs-keyword">import</span> std / [strscans, strutils]
+
+<span class="hljs-keyword">func</span> parse(text: <span class="hljs-built_in">string</span>, reducePos = <span class="hljs-number">0</span>): <span class="hljs-built_in">seq</span>[<span class="hljs-type">PhaseCoord</span>] =
+  <span class="hljs-keyword">var</span> c: <span class="hljs-type">PhaseCoord</span>
+  <span class="hljs-keyword">for</span> line <span class="hljs-keyword">in</span> text.splitLines:
+      <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> scanf(line, <span class="hljs-string">&quot;$i,$s$i,$s$i$s@$s$i,$s$i,$s$i$s&quot;</span>, c.pos.x, c.pos.y, c.pos.z, c.vel.x, c.vel.y, c.vel.z):
+          <span class="hljs-keyword">raise</span> <span class="hljs-type">ValueError</span>.newException <span class="hljs-string">&quot;error parsing line: &quot;</span> &amp; line
+      c.pos.x -= reducePos
+      c.pos.y -= reducePos
+      c.pos.z -= reducePos
+      <span class="hljs-literal">result</span>.add c
+
+<span class="hljs-keyword">let</span> example = parse exampleText
+<span class="hljs-keyword">for</span> c <span class="hljs-keyword">in</span> example:
+  <span class="hljs-keyword">echo</span> c</code></pre><pre class="nb-output"><samp>(pos: (x: 19, y: 13, z: 30), vel: (x: -2, y: 1, z: -2))
+(pos: (x: 18, y: 19, z: 22), vel: (x: -1, y: -1, z: -2))
+(pos: (x: 20, y: 25, z: 34), vel: (x: -2, y: -2, z: -4))
+(pos: (x: 12, y: 31, z: 28), vel: (x: -1, y: -2, z: -1))
+(pos: (x: 20, y: 19, z: 15), vel: (x: 1, y: -5, z: -3))</samp></pre>
+<p>Ok, the data is parse correctly.</p>
+<p>Now, to test foward path intersection inside a defined area
+I will find the intersection between two lines and check that:</p>
+<ul>
+<li>it is inside the area</li>
+<li>it is in forward path for both hailstones</li>
+</ul>
+<pre><code class="nim hljs"><span class="hljs-keyword">import</span> std / options
+
+<span class="hljs-keyword">func</span> linearSystem(c: <span class="hljs-type">PhaseCoord</span>): (<span class="hljs-built_in">int</span>, <span class="hljs-built_in">int</span>, <span class="hljs-built_in">int</span>) =
+  <span class="hljs-comment"># from</span>
+  <span class="hljs-comment">#   x = c.pos.x + (c.vel.x) t</span>
+  <span class="hljs-comment">#   y = c.pos.y + (c.vel.y) t</span>
+  <span class="hljs-comment"># to</span>
+  <span class="hljs-comment">#   a x + b y = c</span>
+  <span class="hljs-comment"># return (a, b, c)</span>
+  <span class="hljs-comment"># cross multiplying x with c.vel.y and y with c.vel.x I remove t:</span>
+  <span class="hljs-comment">#   (c.vel.y) x - (c.vel.x) y = c.vel.y c.pos.x - c.vel.x c.pos.y</span>
+  <span class="hljs-keyword">return</span> (c.vel.y, -c.vel.x, c.vel.y * c.pos.x - c.vel.x * c.pos.y)
+
+<span class="hljs-keyword">func</span> future(c: <span class="hljs-type">PhaseCoord</span>, x: <span class="hljs-built_in">float</span>): <span class="hljs-built_in">bool</span> =
+  (x &gt; c.pos.x.<span class="hljs-built_in">float</span> <span class="hljs-keyword">and</span> c.vel.x &gt; <span class="hljs-number">0</span>) <span class="hljs-keyword">or</span> (x.<span class="hljs-built_in">float</span> &lt; c.pos.x.<span class="hljs-built_in">float</span> <span class="hljs-keyword">and</span> c.vel.x &lt; <span class="hljs-number">0</span>)
+
+<span class="hljs-keyword">func</span> intersect2d(c1, c2: <span class="hljs-type">PhaseCoord</span>, min=<span class="hljs-number">7.0</span>, max=<span class="hljs-number">27.0</span>): <span class="hljs-type">Option</span>[<span class="hljs-keyword">tuple</span>[x, y: <span class="hljs-built_in">float</span>]] =
+  <span class="hljs-comment"># reduce to a linear system</span>
+  <span class="hljs-comment">#   a x + b y = c</span>
+  <span class="hljs-comment">#   d x + e y = f</span>
+  <span class="hljs-comment"># and solve with Cramer</span>
+  <span class="hljs-keyword">let</span>
+    (a, b, c) = linearSystem c1
+    (e, f, g) = linearSystem c2
+    det = a.<span class="hljs-built_in">float</span>*f.<span class="hljs-built_in">float</span> - b.<span class="hljs-built_in">float</span>*e.<span class="hljs-built_in">float</span>
+    detX = c.<span class="hljs-built_in">float</span>*f.<span class="hljs-built_in">float</span> - b.<span class="hljs-built_in">float</span>*g.<span class="hljs-built_in">float</span>
+    detY = a.<span class="hljs-built_in">float</span>*g.<span class="hljs-built_in">float</span> - c.<span class="hljs-built_in">float</span>*e.<span class="hljs-built_in">float</span>
+  <span class="hljs-keyword">if</span> det == <span class="hljs-number">0</span>:
+    <span class="hljs-keyword">return</span> <span class="hljs-comment"># None</span>
+  <span class="hljs-keyword">let</span>
+    x = detX.<span class="hljs-built_in">float</span> / det.<span class="hljs-built_in">float</span>
+    y = detY.<span class="hljs-built_in">float</span> / det.<span class="hljs-built_in">float</span>
+  <span class="hljs-keyword">if</span> x &lt; min <span class="hljs-keyword">or</span> x &gt; max <span class="hljs-keyword">or</span> y &lt; min <span class="hljs-keyword">or</span> y &gt; max:
+    <span class="hljs-keyword">return</span>
+  <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> c1.future(x) <span class="hljs-keyword">or</span> <span class="hljs-keyword">not</span> c2.future(x):
+    <span class="hljs-keyword">return</span>
+  <span class="hljs-keyword">return</span> some((x, y))
+
+<span class="hljs-keyword">echo</span> intersect2d(example[<span class="hljs-number">0</span>], example[<span class="hljs-number">1</span>]) <span class="hljs-comment"># meet inside</span>
+<span class="hljs-keyword">echo</span> intersect2d(example[<span class="hljs-number">0</span>], example[<span class="hljs-number">3</span>]) <span class="hljs-comment"># meet outside</span>
+<span class="hljs-keyword">echo</span> intersect2d(example[<span class="hljs-number">0</span>], example[<span class="hljs-number">4</span>]) <span class="hljs-comment"># meet in past path</span></code></pre><pre class="nb-output"><samp>some((x: 14.33333333333333, y: 15.33333333333333))
+none(tuple[x: float, y: float])
+none(tuple[x: float, y: float])</samp></pre>
+<p>Ok, works as expected, let's try it on the example.</p>
+<pre><code class="nim hljs"><span class="hljs-keyword">func</span> solution(hail: <span class="hljs-built_in">seq</span>[<span class="hljs-type">PhaseCoord</span>], min=<span class="hljs-number">7.0</span>, max=<span class="hljs-number">27.0</span>): <span class="hljs-built_in">int</span> =
+  <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-number">0</span> ..&lt; hail.<span class="hljs-keyword">high</span>: <span class="hljs-comment"># one less than possible</span>
+    <span class="hljs-keyword">for</span> j <span class="hljs-keyword">in</span> (i + <span class="hljs-number">1</span>) ..&lt; len(hail):
+      <span class="hljs-keyword">if</span> intersect2d(hail[i], hail[j], min=min, max=max).isSome:
+        inc <span class="hljs-literal">result</span>
+
+<span class="hljs-keyword">echo</span> solution example <span class="hljs-comment"># expect 2</span></code></pre><pre class="nb-output"><samp>2</samp></pre>
+<p>Also works as expected, let's try it on the real puzzle.</p>
+<pre><code class="nim hljs"><span class="hljs-keyword">let</span>
+  puzzle = parse(<span class="hljs-string">&quot;puzzle.txt&quot;</span>.readFile, reducePos = <span class="hljs-number">200000000000000.</span><span class="hljs-built_in">int</span>)
+<span class="hljs-keyword">echo</span> len(puzzle)
+<span class="hljs-keyword">echo</span> solution(puzzle, min=<span class="hljs-number">0.0</span>, max=<span class="hljs-number">200000000000000.0</span>)</code></pre><pre class="nb-output"><samp>300
+25261</samp></pre>
+<p>It works! ⭐</p>
+<p>Had issues with solution:</p>
+<ul>
+<li>determinant overflows of 64 bit integers</li>
+<li>tried to reduce determinant</li>
+<li>solved issue by converting determinant to float directly</li>
+</ul>
+<p>Now onto part 2, and it does get a bit crazy,
+I am told that throwing a single rock in 3d space
+I can hit all hailstones. There is a particular position and
+velocity that let's me do that.</p>
+<p>It seems a problem rather easy to generate, but a bit harder to solve.</p>
+</main>
+<footer>
+<hr>
+<div class="nb-box">
+  <span><span class="nb-small">made with <a href="https://pietroppeter.github.io/nimib/">nimib 🐳</a></span></span>
+  <span></span>
+  <span><button class="nb-small" id="show" onclick="toggleSourceDisplay()">Show Source</button></span>
+</div>
+</footer>
+<section id="source">
+<pre><code class="nim hljs"><span class="hljs-keyword">import</span> nimib
+
+nbInit
+nbText: <span class="hljs-string">&quot;&quot;&quot;## Advent of Code 2023, Day 24
+
+We are given position and velocity of hail particles
+moving in 3-dimensional space (all integer values of course).
+
+In Part 1 we are asked to find if forward paths intersect
+when project in 2-dimensional X-Y space,
+looking only in a limited range given by a min and max
+coordinate (valid both for X and Y).
+
+Let's start by parsing the data, using the example
+&quot;&quot;&quot;</span>
+nbCode:
+  <span class="hljs-keyword">let</span> exampleText = <span class="hljs-string">&quot;&quot;&quot;
+19, 13, 30 @ -2,  1, -2
+18, 19, 22 @ -1, -1, -2
+20, 25, 34 @ -2, -2, -4
+12, 31, 28 @ -1, -2, -1
+20, 19, 15 @  1, -5, -3&quot;&quot;&quot;</span>
+  
+  <span class="hljs-keyword">type</span>
+    <span class="hljs-type">Vec3</span> = <span class="hljs-keyword">tuple</span>[x, y, z: <span class="hljs-built_in">int</span>]
+    <span class="hljs-type">PhaseCoord</span> = <span class="hljs-keyword">tuple</span>[pos, vel: <span class="hljs-type">Vec3</span>]
+  
+  <span class="hljs-keyword">import</span> std / [strscans, strutils]
+
+  <span class="hljs-keyword">func</span> parse(text: <span class="hljs-built_in">string</span>, reducePos = <span class="hljs-number">0</span>): <span class="hljs-built_in">seq</span>[<span class="hljs-type">PhaseCoord</span>] =
+    <span class="hljs-keyword">var</span> c: <span class="hljs-type">PhaseCoord</span>
+    <span class="hljs-keyword">for</span> line <span class="hljs-keyword">in</span> text.splitLines:
+        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> scanf(line, <span class="hljs-string">&quot;$i,$s$i,$s$i$s@$s$i,$s$i,$s$i$s&quot;</span>, c.pos.x, c.pos.y, c.pos.z, c.vel.x, c.vel.y, c.vel.z):
+            <span class="hljs-keyword">raise</span> <span class="hljs-type">ValueError</span>.newException <span class="hljs-string">&quot;error parsing line: &quot;</span> &amp; line
+        c.pos.x -= reducePos
+        c.pos.y -= reducePos
+        c.pos.z -= reducePos
+        <span class="hljs-literal">result</span>.add c
+
+  <span class="hljs-keyword">let</span> example = parse exampleText
+  <span class="hljs-keyword">for</span> c <span class="hljs-keyword">in</span> example:
+    <span class="hljs-keyword">echo</span> c
+
+nbText: <span class="hljs-string">&quot;&quot;&quot;
+Ok, the data is parse correctly.
+
+Now, to test foward path intersection inside a defined area
+I will find the intersection between two lines and check that:
+- it is inside the area
+- it is in forward path for both hailstones
+&quot;&quot;&quot;</span>
+nbCode:
+  <span class="hljs-keyword">import</span> std / options
+
+  <span class="hljs-keyword">func</span> linearSystem(c: <span class="hljs-type">PhaseCoord</span>): (<span class="hljs-built_in">int</span>, <span class="hljs-built_in">int</span>, <span class="hljs-built_in">int</span>) =
+    <span class="hljs-comment"># from</span>
+    <span class="hljs-comment">#   x = c.pos.x + (c.vel.x) t</span>
+    <span class="hljs-comment">#   y = c.pos.y + (c.vel.y) t</span>
+    <span class="hljs-comment"># to</span>
+    <span class="hljs-comment">#   a x + b y = c</span>
+    <span class="hljs-comment"># return (a, b, c)</span>
+    <span class="hljs-comment"># cross multiplying x with c.vel.y and y with c.vel.x I remove t:</span>
+    <span class="hljs-comment">#   (c.vel.y) x - (c.vel.x) y = c.vel.y c.pos.x - c.vel.x c.pos.y</span>
+    <span class="hljs-keyword">return</span> (c.vel.y, -c.vel.x, c.vel.y * c.pos.x - c.vel.x * c.pos.y)
+
+  <span class="hljs-keyword">func</span> future(c: <span class="hljs-type">PhaseCoord</span>, x: <span class="hljs-built_in">float</span>): <span class="hljs-built_in">bool</span> =
+    (x &gt; c.pos.x.<span class="hljs-built_in">float</span> <span class="hljs-keyword">and</span> c.vel.x &gt; <span class="hljs-number">0</span>) <span class="hljs-keyword">or</span> (x.<span class="hljs-built_in">float</span> &lt; c.pos.x.<span class="hljs-built_in">float</span> <span class="hljs-keyword">and</span> c.vel.x &lt; <span class="hljs-number">0</span>)
+
+  <span class="hljs-keyword">func</span> intersect2d(c1, c2: <span class="hljs-type">PhaseCoord</span>, min=<span class="hljs-number">7.0</span>, max=<span class="hljs-number">27.0</span>): <span class="hljs-type">Option</span>[<span class="hljs-keyword">tuple</span>[x, y: <span class="hljs-built_in">float</span>]] =
+    <span class="hljs-comment"># reduce to a linear system</span>
+    <span class="hljs-comment">#   a x + b y = c</span>
+    <span class="hljs-comment">#   d x + e y = f</span>
+    <span class="hljs-comment"># and solve with Cramer</span>
+    <span class="hljs-keyword">let</span>
+      (a, b, c) = linearSystem c1
+      (e, f, g) = linearSystem c2
+      det = a.<span class="hljs-built_in">float</span>*f.<span class="hljs-built_in">float</span> - b.<span class="hljs-built_in">float</span>*e.<span class="hljs-built_in">float</span>
+      detX = c.<span class="hljs-built_in">float</span>*f.<span class="hljs-built_in">float</span> - b.<span class="hljs-built_in">float</span>*g.<span class="hljs-built_in">float</span>
+      detY = a.<span class="hljs-built_in">float</span>*g.<span class="hljs-built_in">float</span> - c.<span class="hljs-built_in">float</span>*e.<span class="hljs-built_in">float</span>
+    <span class="hljs-keyword">if</span> det == <span class="hljs-number">0</span>:
+      <span class="hljs-keyword">return</span> <span class="hljs-comment"># None</span>
+    <span class="hljs-keyword">let</span>
+      x = detX.<span class="hljs-built_in">float</span> / det.<span class="hljs-built_in">float</span>
+      y = detY.<span class="hljs-built_in">float</span> / det.<span class="hljs-built_in">float</span>
+    <span class="hljs-keyword">if</span> x &lt; min <span class="hljs-keyword">or</span> x &gt; max <span class="hljs-keyword">or</span> y &lt; min <span class="hljs-keyword">or</span> y &gt; max:
+      <span class="hljs-keyword">return</span>
+    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> c1.future(x) <span class="hljs-keyword">or</span> <span class="hljs-keyword">not</span> c2.future(x):
+      <span class="hljs-keyword">return</span>
+    <span class="hljs-keyword">return</span> some((x, y))
+
+  <span class="hljs-keyword">echo</span> intersect2d(example[<span class="hljs-number">0</span>], example[<span class="hljs-number">1</span>]) <span class="hljs-comment"># meet inside</span>
+  <span class="hljs-keyword">echo</span> intersect2d(example[<span class="hljs-number">0</span>], example[<span class="hljs-number">3</span>]) <span class="hljs-comment"># meet outside</span>
+  <span class="hljs-keyword">echo</span> intersect2d(example[<span class="hljs-number">0</span>], example[<span class="hljs-number">4</span>]) <span class="hljs-comment"># meet in past path</span>
+
+nbText: <span class="hljs-string">&quot;Ok, works as expected, let's try it on the example.&quot;</span>
+nbCode:
+  <span class="hljs-keyword">func</span> solution(hail: <span class="hljs-built_in">seq</span>[<span class="hljs-type">PhaseCoord</span>], min=<span class="hljs-number">7.0</span>, max=<span class="hljs-number">27.0</span>): <span class="hljs-built_in">int</span> =
+    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-number">0</span> ..&lt; hail.<span class="hljs-keyword">high</span>: <span class="hljs-comment"># one less than possible</span>
+      <span class="hljs-keyword">for</span> j <span class="hljs-keyword">in</span> (i + <span class="hljs-number">1</span>) ..&lt; len(hail):
+        <span class="hljs-keyword">if</span> intersect2d(hail[i], hail[j], min=min, max=max).isSome:
+          inc <span class="hljs-literal">result</span>
+
+  <span class="hljs-keyword">echo</span> solution example <span class="hljs-comment"># expect 2</span>
+
+nbText: <span class="hljs-string">&quot;Also works as expected, let's try it on the real puzzle.&quot;</span>
+nbCode:
+  <span class="hljs-keyword">let</span>
+    puzzle = parse(<span class="hljs-string">&quot;puzzle.txt&quot;</span>.readFile, reducePos = <span class="hljs-number">200000000000000.</span><span class="hljs-built_in">int</span>)
+  <span class="hljs-keyword">echo</span> len(puzzle)
+  <span class="hljs-keyword">echo</span> solution(puzzle, min=<span class="hljs-number">0.0</span>, max=<span class="hljs-number">200000000000000.0</span>)
+
+nbText: <span class="hljs-string">&quot;&quot;&quot;
+It works! ⭐
+
+Had issues with solution:
+- determinant overflows of 64 bit integers
+- tried to reduce determinant
+- solved issue by converting determinant to float directly
+
+Now onto part 2, and it does get a bit crazy,
+I am told that throwing a single rock in 3d space
+I can hit all hailstones. There is a particular position and
+velocity that let's me do that.
+
+It seems a problem rather easy to generate, but a bit harder to solve.
+&quot;&quot;&quot;</span>
+
+nbSave
+
+</code></pre>
+</section><script>
+function toggleSourceDisplay() {
+  var btn = document.getElementById("show")
+  var source = document.getElementById("source");
+  if (btn.innerHTML=="Show Source") {
+    btn.innerHTML = "Hide Source";
+    source.style.display = "block";
+  } else {
+    btn.innerHTML = "Show Source";
+    source.style.display = "none";
+  }
+}
+</script></body>
+</html>
