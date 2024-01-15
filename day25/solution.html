@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+  <title>solution.py</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>🐳</text></svg>">
+  <meta content="text/html; charset=utf-8" http-equiv="content-type">
+  <meta content="width=device-width, initial-scale=1" name="viewport">
+  <link rel='stylesheet' href='https://unpkg.com/normalize.css'>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/kognise/water.css@latest/dist/light.min.css">
+  <link rel='stylesheet' href='https://cdn.jsdelivr.net/gh/pietroppeter/nimib/assets/atom-one-light.css'>
+  <style>
+.nb-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.nb-small {
+  font-size: 0.8rem;
+}
+button.nb-small {
+  float: right;
+  padding: 2px;
+  padding-right: 5px;
+  padding-left: 5px;
+}
+section#source {
+  display:none
+}
+
+.nb-output {
+  line-height: 1.15;
+}
+</style>
+  
+</head>
+<body>
+<header>
+<div class="nb-box">
+  <span><a href=".">🏡</a></span>
+  <span><code>solution.py</code></span>
+  <span><a href="https://github.com/pietroppeter/adventofcode2023"><svg aria-hidden="true" width="1.2em" height="1.2em" style="vertical-align: middle;" preserveAspectRatio="xMidYMid meet" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59c.4.07.55-.17.55-.38c0-.19-.01-.82-.01-1.49c-2.01.37-2.53-.49-2.69-.94c-.09-.23-.48-.94-.82-1.13c-.28-.15-.68-.52-.01-.53c.63-.01 1.08.58 1.23.82c.72 1.21 1.87.87 2.33.66c.07-.52.28-.87.51-1.07c-1.78-.2-3.64-.89-3.64-3.95c0-.87.31-1.59.82-2.15c-.08-.2-.36-1.02.08-2.12c0 0 .67-.21 2.2.82c.64-.18 1.32-.27 2-.27c.68 0 1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82c.44 1.1.16 1.92.08 2.12c.51.56.82 1.27.82 2.15c0 3.07-1.87 3.75-3.65 3.95c.29.25.54.73.54 1.48c0 1.07-.01 1.93-.01 2.2c0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z" fill="#000"></path></svg></a></span>
+</div>
+<hr>
+</header><main>
+<h2>Day 25</h2>
+<p>We are given a graph and we are asked to find the 3 edges that partition it
+in two (there is some kind of guarantee that this will happen).
+The solution is found by multiplying cardinality of the two components.</p>
+<p>First we will go through parsing, with the example puzzle:</p>
+<pre><code class="nim hljs">print(example)
+</code></pre><pre class="nb-output"><samp>
+jqt: rhn xhk nvd
+rsh: frs pzl lsr
+xhk: hfx
+cmg: qnr nvd lhk bvb
+rhn: xhk bvb hfx
+bvb: xhk hfx
+pzl: lsr hfx nvd
+qnr: nvd
+ntq: jqt hfx bvb xhk
+nvd: lhk
+lsr: lhk
+rzs: qnr cmg lsr rsh
+frs: qnr lhk lsr
+</samp></pre>
+<p>Parsing into graph structure:</p>
+<pre><code class="nim hljs">def parse_line(line):
+    two = line.split(<span class="hljs-string">&quot;:&quot;</span>)
+    node = two[<span class="hljs-number">0</span>]
+    targets = two[<span class="hljs-number">1</span>].strip().split()
+    <span class="hljs-keyword">return</span> node, targets
+
+def parse_puzzle(text):
+    <span class="hljs-keyword">return</span> {p[<span class="hljs-number">0</span>]: p[<span class="hljs-number">1</span>] <span class="hljs-keyword">for</span> p <span class="hljs-keyword">in</span>[parse_line(line) <span class="hljs-keyword">for</span> line <span class="hljs-keyword">in</span> text.strip().split(<span class="hljs-string">&quot;</span><span class="hljs-meta">\n</span><span class="hljs-string">&quot;</span>)]}
+
+graph_input = parse_puzzle(example)
+
+def get_graph(graph_input):
+    nodes = <span class="hljs-built_in">set</span>()
+    edges = <span class="hljs-built_in">set</span>()
+    <span class="hljs-keyword">for</span> k, v <span class="hljs-keyword">in</span> graph_input.items():
+        nodes.add(k)
+        <span class="hljs-keyword">for</span> h <span class="hljs-keyword">in</span> v:
+            edges.add((k, h))
+            edges.add((h, k))
+            nodes.add(h)
+    <span class="hljs-keyword">return</span> nodes, edges
+
+nodes, edges = get_graph(graph_input)
+print(nodes)
+print(len(nodes))
+print(edges)
+print(len(edges))
+</code></pre><pre class="nb-output"><samp>{'ntq', 'qnr', 'rhn', 'lsr', 'cmg', 'lhk', 'rzs', 'bvb', 'jqt', 'nvd', 'hfx', 'pzl', 'frs', 'xhk', 'rsh'}
+15
+{('rzs', 'lsr'), ('jqt', 'xhk'), ('lsr', 'lhk'), ('lhk', 'lsr'), ('frs', 'rsh'), ('lhk', 'nvd'), ('hfx', 'bvb'), ('rsh', 'pzl'), ('rsh', 'lsr'), ('rhn', 'jqt'), ('rhn', 'hfx'), ('pzl', 'lsr'), ('lsr', 'rzs'), ('bvb', 'cmg'), ('pzl', 'nvd'), ('ntq', 'bvb'), ('xhk', 'rhn'), ('nvd', 'pzl'), ('rhn', 'xhk'), ('xhk', 'bvb'), ('bvb', 'rhn'), ('cmg', 'nvd'), ('hfx', 'rhn'), ('pzl', 'hfx'), ('lsr', 'frs'), ('qnr', 'rzs'), ('lsr', 'rsh'), ('frs', 'lsr'), ('rzs', 'qnr'), ('nvd', 'jqt'), ('hfx', 'pzl'), ('xhk', 'hfx'), ('xhk', 'jqt'), ('nvd', 'lhk'), ('jqt', 'rhn'), ('qnr', 'cmg'), ('rhn', 'bvb'), ('xhk', 'ntq'), ('rsh', 'rzs'), ('qnr', 'frs'), ('cmg', 'lhk'), ('rzs', 'cmg'), ('rzs', 'rsh'), ('frs', 'lhk'), ('bvb', 'hfx'), ('lhk', 'cmg'), ('lsr', 'pzl'), ('lhk', 'frs'), ('jqt', 'nvd'), ('nvd', 'qnr'), ('hfx', 'ntq'), ('bvb', 'ntq'), ('rsh', 'frs'), ('hfx', 'xhk'), ('bvb', 'xhk'), ('ntq', 'hfx'), ('ntq', 'jqt'), ('cmg', 'qnr'), ('cmg', 'rzs'), ('frs', 'qnr'), ('pzl', 'rsh'), ('jqt', 'ntq'), ('cmg', 'bvb'), ('ntq', 'xhk'), ('qnr', 'nvd'), ('nvd', 'cmg')}
+66
+</samp></pre>
+<p>Let's see how many edges per node:</p>
+<pre><code class="nim hljs">def get_edges(node, edges):
+    <span class="hljs-keyword">return</span> [edge <span class="hljs-keyword">for</span> edge <span class="hljs-keyword">in</span> edges <span class="hljs-keyword">if</span> edge[<span class="hljs-number">0</span>] == node]
+
+def get_edges_by_node(nodes, edges):
+    <span class="hljs-keyword">return</span> {node: len(get_edges(node, edges)) <span class="hljs-keyword">for</span> node <span class="hljs-keyword">in</span> nodes}
+
+def print_edges_by_node(nodes, edges):
+   en = get_edges_by_node(nodes, edges)
+   <span class="hljs-keyword">for</span> k, v <span class="hljs-keyword">in</span> sorted(en.items(), key=lambda x: x[<span class="hljs-number">1</span>], reverse=<span class="hljs-type">True</span>):
+       print(<span class="hljs-string">f&quot;{k}: {v}&quot;</span>)
+
+print_edges_by_node(nodes, edges)
+</code></pre><pre class="nb-output"><samp>lsr: 5
+cmg: 5
+bvb: 5
+nvd: 5
+hfx: 5
+xhk: 5
+ntq: 4
+qnr: 4
+rhn: 4
+lhk: 4
+rzs: 4
+jqt: 4
+pzl: 4
+frs: 4
+rsh: 4
+</samp></pre>
+<p>I am using this to visualize teh graph in an <a href="https://csacademy.com/app/graph_editor/">online editor</a>.</p>
+<pre><code class="nim hljs">def to_gephi(edges):
+    lines = [<span class="hljs-string">f&quot;{e[0]} {e[1]}&quot;</span> <span class="hljs-keyword">for</span> e <span class="hljs-keyword">in</span> edges]
+    <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;</span><span class="hljs-meta">\n</span><span class="hljs-string">&quot;</span>.join(lines)
+
+print(to_gephi(edges))
+</code></pre><pre class="nb-output"><samp>rzs lsr
+jqt xhk
+lsr lhk
+lhk lsr
+frs rsh
+lhk nvd
+hfx bvb
+rsh pzl
+rsh lsr
+rhn jqt
+rhn hfx
+pzl lsr
+lsr rzs
+bvb cmg
+pzl nvd
+ntq bvb
+xhk rhn
+nvd pzl
+rhn xhk
+xhk bvb
+bvb rhn
+cmg nvd
+hfx rhn
+pzl hfx
+lsr frs
+qnr rzs
+lsr rsh
+frs lsr
+rzs qnr
+nvd jqt
+hfx pzl
+xhk hfx
+xhk jqt
+nvd lhk
+jqt rhn
+qnr cmg
+rhn bvb
+xhk ntq
+rsh rzs
+qnr frs
+cmg lhk
+rzs cmg
+rzs rsh
+frs lhk
+bvb hfx
+lhk cmg
+lsr pzl
+lhk frs
+jqt nvd
+nvd qnr
+hfx ntq
+bvb ntq
+rsh frs
+hfx xhk
+bvb xhk
+ntq hfx
+ntq jqt
+cmg qnr
+cmg rzs
+frs qnr
+pzl rsh
+jqt ntq
+cmg bvb
+ntq xhk
+qnr nvd
+nvd cmg
+</samp></pre>
+<p>Now solving using <a href="https://networkx.org/">NetworkX</a></p>
+<pre><code class="nim hljs"><span class="hljs-keyword">import</span> networkx <span class="hljs-keyword">as</span> nx
+<span class="hljs-type">G</span> = nx.<span class="hljs-type">Graph</span>()
+<span class="hljs-type">G</span>.add_edges_from(edges)
+print(<span class="hljs-type">G</span>)
+</code></pre><pre class="nb-output"><samp>Graph with 15 nodes and 33 edges
+</samp></pre>
+<p>Let's see how <a href="https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.flow.minimum_cut.html">minimum_cut</a> works with this graph:</p>
+<pre><code class="nim hljs">nx.set_edge_attributes(<span class="hljs-type">G</span>, <span class="hljs-number">1</span>, <span class="hljs-string">&quot;capacity&quot;</span>)
+min_cut, partition = nx.minimum_cut(<span class="hljs-type">G</span>, <span class="hljs-string">&quot;cmg&quot;</span>, <span class="hljs-string">&quot;bvb&quot;</span>)
+print(min_cut)
+print(partition[<span class="hljs-number">0</span>])
+print(partition[<span class="hljs-number">1</span>])
+</code></pre><pre class="nb-output"><samp>3
+{'qnr', 'cmg', 'lsr', 'rzs', 'nvd', 'pzl', 'frs', 'lhk', 'rsh'}
+{'hfx', 'ntq', 'rhn', 'bvb', 'jqt', 'xhk'}
+</samp></pre>
+<p>It works!</p>
+<p>Let's see what it does if I set as source and destination same component</p>
+<pre><code class="nim hljs">min_cut, partition = nx.minimum_cut(<span class="hljs-type">G</span>, <span class="hljs-string">&quot;frs&quot;</span>, <span class="hljs-string">&quot;qnr&quot;</span>)
+print(min_cut)
+print(partition[<span class="hljs-number">0</span>])
+print(partition[<span class="hljs-number">1</span>])
+</code></pre><pre class="nb-output"><samp>4
+{'ntq', 'rhn', 'lsr', 'cmg', 'rzs', 'bvb', 'jqt', 'nvd', 'xhk', 'hfx', 'pzl', 'frs', 'lhk', 'rsh'}
+{'qnr'}
+</samp></pre>
+<p>It gives me a value different from 3</p>
+<p>How do I find the removed edges?</p>
+<p>...after looking into NetworkX documentation... Aaaah! This should give the answer straight away: <a href="https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.connectivity.cuts.minimum_edge_cut.html">minimum_edge_cut</a></p>
+<pre><code class="nim hljs">cutset = nx.minimum_edge_cut(<span class="hljs-type">G</span>)
+print(cutset)
+</code></pre><pre class="nb-output"><samp>{('jqt', 'nvd'), ('bvb', 'cmg'), ('hfx', 'pzl')}
+</samp></pre>
+<p>Indeed it does, but I will still need the partition to compute the solution.</p>
+<p>Now let's write a generic function for the solution</p>
+<pre><code class="nim hljs">def solution(graph: nx.<span class="hljs-type">Graph</span>) -&gt; <span class="hljs-built_in">int</span>:
+    cutset = nx.minimum_edge_cut(graph)
+    <span class="hljs-keyword">assert</span> len(cutset) == <span class="hljs-number">3</span>
+    edge = cutset.pop()
+    source = edge[<span class="hljs-number">0</span>]
+    dest = edge[<span class="hljs-number">1</span>]
+    min_cut, partition = nx.minimum_cut(graph, source, dest)
+    <span class="hljs-keyword">assert</span> min_cut == <span class="hljs-number">3</span>
+    <span class="hljs-keyword">assert</span> len(partition) == <span class="hljs-number">2</span>
+    <span class="hljs-keyword">return</span> len(partition[<span class="hljs-number">0</span>])*len(partition[<span class="hljs-number">1</span>])
+
+print(solution(<span class="hljs-type">G</span>))
+</code></pre><pre class="nb-output"><samp>54
+</samp></pre>
+<p>Let's try with the real puzzle</p>
+<pre><code class="nim hljs">with open(<span class="hljs-string">&quot;puzzle.txt&quot;</span>, <span class="hljs-string">'r'</span>) <span class="hljs-keyword">as</span> f:
+    puzzle = f.read()
+nodes, edges = get_graph(parse_puzzle(puzzle))
+<span class="hljs-type">G</span> = nx.<span class="hljs-type">Graph</span>()
+<span class="hljs-type">G</span>.add_edges_from(edges)
+nx.set_edge_attributes(<span class="hljs-type">G</span>, <span class="hljs-number">1</span>, <span class="hljs-string">&quot;capacity&quot;</span>)
+print(<span class="hljs-type">G</span>)
+print(solution(<span class="hljs-type">G</span>))
+</code></pre><pre class="nb-output"><samp>Graph with 1568 nodes and 3503 edges
+614655
+</samp></pre>
+<p>It worked! ⭐</p>
+</main>
+<footer>
+<hr>
+<div class="nb-box">
+  <span><span class="nb-small">made with <a href="https://pietroppeter.github.io/nimib/">nimib 🐳</a></span></span>
+  <span></span>
+  <span><button class="nb-small" id="show" onclick="toggleSourceDisplay()">Show Source</button></span>
+</div>
+</footer>
+<section id="source">
+<pre><code class="nim hljs"><span class="hljs-keyword">import</span> nimib <span class="hljs-keyword">as</span> nb
+
+nb.init()
+
+nb.text(<span class="hljs-string">&quot;&quot;&quot; ## Day 25
+
+We are given a graph and we are asked to find the 3 edges that partition it
+in two (there is some kind of guarantee that this will happen).
+The solution is found by multiplying cardinality of the two components.
+
+First we will go through parsing, with the example puzzle:
+&quot;&quot;&quot;</span>)
+
+example = <span class="hljs-string">&quot;&quot;&quot;
+jqt: rhn xhk nvd
+rsh: frs pzl lsr
+xhk: hfx
+cmg: qnr nvd lhk bvb
+rhn: xhk bvb hfx
+bvb: xhk hfx
+pzl: lsr hfx nvd
+qnr: nvd
+ntq: jqt hfx bvb xhk
+nvd: lhk
+lsr: lhk
+rzs: qnr cmg lsr rsh
+frs: qnr lhk lsr&quot;&quot;&quot;</span>
+
+with nb.code():
+    print(example)
+
+nb.text(<span class="hljs-string">&quot;&quot;&quot;
+Parsing into graph structure:
+&quot;&quot;&quot;</span>)
+
+with nb.code():
+    def parse_line(line):
+        two = line.split(<span class="hljs-string">&quot;:&quot;</span>)
+        node = two[<span class="hljs-number">0</span>]
+        targets = two[<span class="hljs-number">1</span>].strip().split()
+        <span class="hljs-keyword">return</span> node, targets
+    
+    def parse_puzzle(text):
+        <span class="hljs-keyword">return</span> {p[<span class="hljs-number">0</span>]: p[<span class="hljs-number">1</span>] <span class="hljs-keyword">for</span> p <span class="hljs-keyword">in</span>[parse_line(line) <span class="hljs-keyword">for</span> line <span class="hljs-keyword">in</span> text.strip().split(<span class="hljs-string">&quot;</span><span class="hljs-meta">\n</span><span class="hljs-string">&quot;</span>)]}
+    
+    graph_input = parse_puzzle(example)
+
+    def get_graph(graph_input):
+        nodes = <span class="hljs-built_in">set</span>()
+        edges = <span class="hljs-built_in">set</span>()
+        <span class="hljs-keyword">for</span> k, v <span class="hljs-keyword">in</span> graph_input.items():
+            nodes.add(k)
+            <span class="hljs-keyword">for</span> h <span class="hljs-keyword">in</span> v:
+                edges.add((k, h))
+                edges.add((h, k))
+                nodes.add(h)
+        <span class="hljs-keyword">return</span> nodes, edges
+    
+    nodes, edges = get_graph(graph_input)
+    print(nodes)
+    print(len(nodes))
+    print(edges)
+    print(len(edges))
+
+nb.text(<span class="hljs-string">&quot;Let's see how many edges per node:&quot;</span>)
+with nb.code():
+    def get_edges(node, edges):
+        <span class="hljs-keyword">return</span> [edge <span class="hljs-keyword">for</span> edge <span class="hljs-keyword">in</span> edges <span class="hljs-keyword">if</span> edge[<span class="hljs-number">0</span>] == node]
+    
+    def get_edges_by_node(nodes, edges):
+        <span class="hljs-keyword">return</span> {node: len(get_edges(node, edges)) <span class="hljs-keyword">for</span> node <span class="hljs-keyword">in</span> nodes}
+
+    def print_edges_by_node(nodes, edges):
+       en = get_edges_by_node(nodes, edges)
+       <span class="hljs-keyword">for</span> k, v <span class="hljs-keyword">in</span> sorted(en.items(), key=lambda x: x[<span class="hljs-number">1</span>], reverse=<span class="hljs-type">True</span>):
+           print(<span class="hljs-string">f&quot;{k}: {v}&quot;</span>)
+
+    print_edges_by_node(nodes, edges)
+
+nb.text(<span class="hljs-string">&quot;I am using this to visualize teh graph in an [online editor](https://csacademy.com/app/graph_editor/).&quot;</span>)
+with nb.code():
+    def to_gephi(edges):
+        lines = [<span class="hljs-string">f&quot;{e[0]} {e[1]}&quot;</span> <span class="hljs-keyword">for</span> e <span class="hljs-keyword">in</span> edges]
+        <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;</span><span class="hljs-meta">\n</span><span class="hljs-string">&quot;</span>.join(lines)
+
+    print(to_gephi(edges))
+
+
+nb.text(<span class="hljs-string">&quot;Now solving using [NetworkX](https://networkx.org/)&quot;</span>)
+
+with nb.code():
+    <span class="hljs-keyword">import</span> networkx <span class="hljs-keyword">as</span> nx
+    <span class="hljs-type">G</span> = nx.<span class="hljs-type">Graph</span>()
+    <span class="hljs-type">G</span>.add_edges_from(edges)
+    print(<span class="hljs-type">G</span>)
+
+nb.text(<span class="hljs-string">&quot;Let's see how [minimum_cut](https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.flow.minimum_cut.html) works with this graph:&quot;</span>)
+
+with nb.code():
+    nx.set_edge_attributes(<span class="hljs-type">G</span>, <span class="hljs-number">1</span>, <span class="hljs-string">&quot;capacity&quot;</span>)
+    min_cut, partition = nx.minimum_cut(<span class="hljs-type">G</span>, <span class="hljs-string">&quot;cmg&quot;</span>, <span class="hljs-string">&quot;bvb&quot;</span>)
+    print(min_cut)
+    print(partition[<span class="hljs-number">0</span>])
+    print(partition[<span class="hljs-number">1</span>])
+
+nb.text(<span class="hljs-string">&quot;It works!&quot;</span>)
+nb.text(<span class="hljs-string">&quot;Let's see what it does if I set as source and destination same component&quot;</span>)
+with nb.code():
+    min_cut, partition = nx.minimum_cut(<span class="hljs-type">G</span>, <span class="hljs-string">&quot;frs&quot;</span>, <span class="hljs-string">&quot;qnr&quot;</span>)
+    print(min_cut)
+    print(partition[<span class="hljs-number">0</span>])
+    print(partition[<span class="hljs-number">1</span>])
+nb.text(<span class="hljs-string">&quot;It gives me a value different from 3&quot;</span>)
+
+nb.text(<span class="hljs-string">&quot;How do I find the removed edges?&quot;</span>)
+nb.text(<span class="hljs-string">&quot;...after looking into NetworkX documentation... Aaaah! This should give the answer straight away: [minimum_edge_cut](https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.connectivity.cuts.minimum_edge_cut.html)&quot;</span>)
+with nb.code():
+    cutset = nx.minimum_edge_cut(<span class="hljs-type">G</span>)
+    print(cutset)
+nb.text(<span class="hljs-string">&quot;Indeed it does, but I will still need the partition to compute the solution.&quot;</span>)
+
+nb.text(<span class="hljs-string">&quot;Now let's write a generic function for the solution&quot;</span>)
+
+with nb.code():
+    def solution(graph: nx.<span class="hljs-type">Graph</span>) -&gt; <span class="hljs-built_in">int</span>:
+        cutset = nx.minimum_edge_cut(graph)
+        <span class="hljs-keyword">assert</span> len(cutset) == <span class="hljs-number">3</span>
+        edge = cutset.pop()
+        source = edge[<span class="hljs-number">0</span>]
+        dest = edge[<span class="hljs-number">1</span>]
+        min_cut, partition = nx.minimum_cut(graph, source, dest)
+        <span class="hljs-keyword">assert</span> min_cut == <span class="hljs-number">3</span>
+        <span class="hljs-keyword">assert</span> len(partition) == <span class="hljs-number">2</span>
+        <span class="hljs-keyword">return</span> len(partition[<span class="hljs-number">0</span>])*len(partition[<span class="hljs-number">1</span>])
+
+    print(solution(<span class="hljs-type">G</span>))
+
+nb.text(<span class="hljs-string">&quot;Let's try with the real puzzle&quot;</span>)
+
+with nb.code():
+    with open(<span class="hljs-string">&quot;puzzle.txt&quot;</span>, <span class="hljs-string">'r'</span>) <span class="hljs-keyword">as</span> f:
+        puzzle = f.read()
+    nodes, edges = get_graph(parse_puzzle(puzzle))
+    <span class="hljs-type">G</span> = nx.<span class="hljs-type">Graph</span>()
+    <span class="hljs-type">G</span>.add_edges_from(edges)
+    nx.set_edge_attributes(<span class="hljs-type">G</span>, <span class="hljs-number">1</span>, <span class="hljs-string">&quot;capacity&quot;</span>)
+    print(<span class="hljs-type">G</span>)
+    print(solution(<span class="hljs-type">G</span>))
+
+nb.text(<span class="hljs-string">&quot;It worked! ⭐&quot;</span>)
+nb.save()
+</code></pre>
+</section><script>
+function toggleSourceDisplay() {
+  var btn = document.getElementById("show")
+  var source = document.getElementById("source");
+  if (btn.innerHTML=="Show Source") {
+    btn.innerHTML = "Hide Source";
+    source.style.display = "block";
+  } else {
+    btn.innerHTML = "Show Source";
+    source.style.display = "none";
+  }
+}
+</script></body>
+</html>
