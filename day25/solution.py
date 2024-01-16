@@ -77,7 +77,7 @@ with nb.code():
 
     print_edges_by_node(nodes, edges)
 
-nb.text("I am using this to visualize teh graph in an [online editor](https://csacademy.com/app/graph_editor/).")
+nb.text("I am using this to visualize the graph in an [online editor](https://csacademy.com/app/graph_editor/).")
 with nb.code():
     def to_gephi(edges):
         lines = [f"{e[0]} {e[1]}" for e in edges]
